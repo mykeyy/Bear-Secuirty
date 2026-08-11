@@ -1,29 +1,26 @@
 {
-  description = "Development shell for Bear Sec Bot";
+  description = "Development shell for Bear Security";
 
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
-  };
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-  outputs = { nixpkgs, flake-utils, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = import nixpkgs { inherit system; };
-        python = pkgs.python312.withPackages (pythonPackages:
-          with pythonPackages; [
-            discordpy
-            python-dotenv
-          ]);
-      in {
-        devShells.default = pkgs.mkShell {
-          packages = [
-            python
-            pkgs.ruff
-            pkgs.basedpyright
-          ];
-        };
+  outputs = { self, nixpkgs }:
+    let
+      systems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
+      forAllSystems = nixpkgs.lib.genAttrs systems;
+    in {
+      devShells = forAllSystems (system:
+        let pkgs = import nixpkgs { inherit system; };
+        in {
+          default = pkgs.mkShell {
+            packages = with pkgs; [
+              cargo
+              clippy
+              rustc
+              rustfmt
+            ];
+          };
+        });
 
-        formatter = pkgs.nixfmt-tree;
-      });
+      formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt-tree);
+    };
 }
