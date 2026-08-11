@@ -140,11 +140,23 @@ impl App {
                 .remove_guild_member(guild_id, message.author.id)
                 .reason("Bear Security honeypot triggered")
                 .await?;
-            tracing::warn!(guild = guild_id.get(), user = message.author.id.get(), "honeypot kicked member");
+            tracing::warn!(
+                guild = guild_id.get(),
+                user = message.author.id.get(),
+                "honeypot kicked member"
+            );
         } else if is_scam {
-            tracing::warn!(guild = guild_id.get(), user = message.author.id.get(), "removed suspicious scam message");
+            tracing::warn!(
+                guild = guild_id.get(),
+                user = message.author.id.get(),
+                "removed suspicious scam message"
+            );
         } else {
-            tracing::warn!(guild = guild_id.get(), user = message.author.id.get(), "removed spam message");
+            tracing::warn!(
+                guild = guild_id.get(),
+                user = message.author.id.get(),
+                "removed spam message"
+            );
         }
 
         Ok(())
@@ -155,7 +167,12 @@ impl App {
         message: &MessageCreate,
         guild_id: Id<GuildMarker>,
     ) -> Result<()> {
-        match message.content.split_whitespace().next().unwrap_or_default() {
+        match message
+            .content
+            .split_whitespace()
+            .next()
+            .unwrap_or_default()
+        {
             "b!ping" => {
                 let uptime = self.started_at.elapsed().as_secs();
                 let components = ui::notice(format!(
@@ -185,7 +202,11 @@ impl App {
         if let Some(role_id) = settings.autorole_id {
             if let Err(error) = self
                 .http
-                .add_guild_member_role(event.guild_id, event.user.id, Id::<RoleMarker>::new(role_id))
+                .add_guild_member_role(
+                    event.guild_id,
+                    event.user.id,
+                    Id::<RoleMarker>::new(role_id),
+                )
                 .reason("Bear Security autorole")
                 .await
             {
@@ -233,10 +254,12 @@ impl App {
 
         match data {
             InteractionData::ApplicationCommand(command) => {
-                self.handle_application_command(interaction, command).await?;
+                self.handle_application_command(interaction, command)
+                    .await?;
             }
             InteractionData::MessageComponent(component) => {
-                self.handle_component(interaction, &component.custom_id).await?;
+                self.handle_component(interaction, &component.custom_id)
+                    .await?;
             }
             _ => {}
         }
@@ -345,10 +368,13 @@ impl App {
             return Ok(());
         }
 
-        let channel = command.options.first().and_then(|option| match &option.value {
-            CommandOptionValue::Channel(id) => Some(id.get()),
-            _ => None,
-        });
+        let channel = command
+            .options
+            .first()
+            .and_then(|option| match &option.value {
+                CommandOptionValue::Channel(id) => Some(id.get()),
+                _ => None,
+            });
         let mut settings = self.storage.get(guild_id.get()).await?;
         match target {
             ChannelSetting::Welcome => settings.welcome_channel_id = channel,
@@ -366,7 +392,11 @@ impl App {
         Ok(())
     }
 
-    async fn set_autorole(&mut self, interaction: &Interaction, command: &CommandData) -> Result<()> {
+    async fn set_autorole(
+        &mut self,
+        interaction: &Interaction,
+        command: &CommandData,
+    ) -> Result<()> {
         let Some(guild_id) = interaction.guild_id else {
             return Ok(());
         };
@@ -380,10 +410,13 @@ impl App {
             return Ok(());
         }
 
-        let role = command.options.first().and_then(|option| match &option.value {
-            CommandOptionValue::Role(id) => Some(id.get()),
-            _ => None,
-        });
+        let role = command
+            .options
+            .first()
+            .and_then(|option| match &option.value {
+                CommandOptionValue::Role(id) => Some(id.get()),
+                _ => None,
+            });
         let mut settings = self.storage.get(guild_id.get()).await?;
         settings.autorole_id = role;
         self.storage.save(guild_id.get(), &settings).await?;
@@ -511,10 +544,10 @@ async fn register_commands(http: &HttpClient, application_id: Id<ApplicationMark
             CommandType::ChatInput,
         )
         .default_member_permissions(manage)
-        .option(ChannelBuilder::new("channel", "Channel for welcome messages").channel_types([
-            ChannelType::GuildText,
-            ChannelType::GuildAnnouncement,
-        ]))
+        .option(
+            ChannelBuilder::new("channel", "Channel for welcome messages")
+                .channel_types([ChannelType::GuildText, ChannelType::GuildAnnouncement]),
+        )
         .build(),
         CommandBuilder::new(
             "leave",
@@ -522,10 +555,10 @@ async fn register_commands(http: &HttpClient, application_id: Id<ApplicationMark
             CommandType::ChatInput,
         )
         .default_member_permissions(manage)
-        .option(ChannelBuilder::new("channel", "Channel for leave messages").channel_types([
-            ChannelType::GuildText,
-            ChannelType::GuildAnnouncement,
-        ]))
+        .option(
+            ChannelBuilder::new("channel", "Channel for leave messages")
+                .channel_types([ChannelType::GuildText, ChannelType::GuildAnnouncement]),
+        )
         .build(),
         CommandBuilder::new(
             "autorole",

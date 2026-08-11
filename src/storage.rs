@@ -31,7 +31,8 @@ impl Storage {
         {
             "memory" => Ok(Self::Memory(HashMap::new())),
             "turso" => {
-                let url = env::var("TURSO_DATABASE_URL").context("TURSO_DATABASE_URL is required")?;
+                let url =
+                    env::var("TURSO_DATABASE_URL").context("TURSO_DATABASE_URL is required")?;
                 let token = env::var("TURSO_AUTH_TOKEN").context("TURSO_AUTH_TOKEN is required")?;
                 let db = Builder::new_remote(url, token).build().await?;
                 let connection = db.connect()?;
@@ -41,7 +42,8 @@ impl Storage {
             }
             "postgres" | "postgresql" => {
                 let url = env::var("DATABASE_URL").context("DATABASE_URL is required")?;
-                let roots = RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+                let roots =
+                    RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
                 let config = rustls::ClientConfig::builder()
                     .with_root_certificates(roots)
                     .with_no_client_auth();
