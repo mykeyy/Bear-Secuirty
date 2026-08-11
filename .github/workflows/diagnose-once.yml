@@ -35,3 +35,5 @@ jobs:
           git add ci-diagnostic.txt
           git commit -m "ci: capture Rust diagnostic"
           git push
+
+# Final verification pass before archive cleanup.
