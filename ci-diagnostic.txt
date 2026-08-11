@@ -1,0 +1,9 @@
+[1m[32m    Updating[0m crates.io index
+[1m[31merror[0m[1m:[0m failed to select a version for the requirement `twilight-util = "^0.17.1"`
+candidate versions found which didn't match: 0.17.0, 0.16.0, 0.16.0-rc.1, ...
+location searched: crates.io index
+required by package `bear-security v1.0.0 (/home/runner/work/Bear-Secuirty/Bear-Secuirty)`
+if you are looking for the prerelease package it needs to be specified explicitly
+    twilight-util = { version = "0.16.0-rc.1" }
+
+BEAR_SECURITY_CLIPPY_EXIT=101
