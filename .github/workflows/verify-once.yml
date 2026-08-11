@@ -1,0 +1,45 @@
+name: Verify CI once
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.89.0
+          components: rustfmt, clippy
+      - name: Run exact CI commands
+        shell: bash
+        run: |
+          set +e
+          : > ci-verification.txt
+
+          cargo fmt --check >> ci-verification.txt 2>&1
+          printf 'FORMAT_EXIT=%s\n' "$?" >> ci-verification.txt
+
+          cargo clippy --all-targets -- -D warnings >> ci-verification.txt 2>&1
+          printf 'CLIPPY_EXIT=%s\n' "$?" >> ci-verification.txt
+
+          cargo test >> ci-verification.txt 2>&1
+          printf 'TEST_EXIT=%s\n' "$?" >> ci-verification.txt
+
+          exit 0
+      - name: Commit verification
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ci-verification.txt
+          git commit -m "ci: capture final verification"
+          git push
