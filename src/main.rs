@@ -8,7 +8,7 @@ use anyhow::{Context, Result};
 use security::{SpamTracker, looks_like_scam};
 use storage::{GuildSettings, Storage};
 use twilight_gateway::{Event, EventTypeFlags, Intents, Shard, ShardId, StreamExt as _};
-use twilight_http::Client as HttpClient;
+use twilight_http::{Client as HttpClient, request::AuditLogReason};
 use twilight_model::{
     application::{
         command::CommandType,
@@ -412,11 +412,10 @@ impl App {
             .await?
             .model()
             .await?;
-        let channel_id = channel.id();
-        settings.honeypot_channel_id = Some(channel_id.get());
+        settings.honeypot_channel_id = Some(channel.id.get());
 
         let components = ui::honeypot_warning();
-        send_v2(&self.http, channel_id, &components).await?;
+        send_v2(&self.http, channel.id, &components).await?;
         Ok(())
     }
 
