@@ -199,8 +199,8 @@ impl App {
     async fn on_member_add(&mut self, event: &MemberAdd) -> Result<()> {
         let settings = self.storage.get(event.guild_id.get()).await?;
 
-        if let Some(role_id) = settings.autorole_id {
-            if let Err(error) = self
+        if let Some(role_id) = settings.autorole_id
+            && let Err(error) = self
                 .http
                 .add_guild_member_role(
                     event.guild_id,
@@ -209,9 +209,8 @@ impl App {
                 )
                 .reason("Bear Security autorole")
                 .await
-            {
-                tracing::warn!(%error, "failed to add autorole");
-            }
+        {
+            tracing::warn!(%error, "failed to add autorole");
         }
 
         if let Some(channel_id) = settings.welcome_channel_id {
