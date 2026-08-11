@@ -23,7 +23,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 twilight-gateway = { version = "0.17.1", default-features = false, features = ["rustls-platform-verifier", "zlib"] }
 twilight-http = { version = "0.17.1", default-features = false, features = ["decompression", "rustls-platform-verifier"] }
 twilight-model = "0.17.1"
-twilight-util = { version = "0.17.1", features = ["builder"] }
+twilight-util = { version = "0.17.0", features = ["builder"] }
 webpki-roots = "1"
 
 [lints.rust]
