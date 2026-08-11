@@ -23,7 +23,7 @@ use twilight_model::{
     http::interaction::{InteractionResponse, InteractionResponseData, InteractionResponseType},
     id::{
         Id,
-        marker::{ChannelMarker, GuildMarker, RoleMarker, UserMarker},
+        marker::{ApplicationMarker, ChannelMarker, GuildMarker, RoleMarker, UserMarker},
     },
 };
 use twilight_util::builder::command::{ChannelBuilder, CommandBuilder, RoleBuilder};
@@ -41,7 +41,7 @@ async fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "bear_security=info".into()),
+                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("bear_security=info")),
         )
         .init();
 
@@ -255,13 +255,21 @@ impl App {
             }
             "security" => {
                 let Some(guild_id) = interaction.guild_id else {
-                    self.respond_v2(interaction, ui::notice("This command only works in a server."), true)
-                        .await?;
+                    self.respond_v2(
+                        interaction,
+                        ui::notice("This command only works in a server."),
+                        true,
+                    )
+                    .await?;
                     return Ok(());
                 };
                 if !can_manage_guild(interaction) {
-                    self.respond_v2(interaction, ui::notice("You need **Manage Server** to use this panel."), true)
-                        .await?;
+                    self.respond_v2(
+                        interaction,
+                        ui::notice("You need **Manage Server** to use this panel."),
+                        true,
+                    )
+                    .await?;
                     return Ok(());
                 }
                 let settings = self.storage.get(guild_id.get()).await?;
@@ -328,12 +336,16 @@ impl App {
             return Ok(());
         };
         if !can_manage_guild(interaction) {
-            self.respond_v2(interaction, ui::notice("You need **Manage Server** to change this setting."), true)
-                .await?;
+            self.respond_v2(
+                interaction,
+                ui::notice("You need **Manage Server** to change this setting."),
+                true,
+            )
+            .await?;
             return Ok(());
         }
 
-        let channel = command.options.first().and_then(|option| match option.value {
+        let channel = command.options.first().and_then(|option| match &option.value {
             CommandOptionValue::Channel(id) => Some(id.get()),
             _ => None,
         });
@@ -359,12 +371,16 @@ impl App {
             return Ok(());
         };
         if !can_manage_guild(interaction) {
-            self.respond_v2(interaction, ui::notice("You need **Manage Server** to change this setting."), true)
-                .await?;
+            self.respond_v2(
+                interaction,
+                ui::notice("You need **Manage Server** to change this setting."),
+                true,
+            )
+            .await?;
             return Ok(());
         }
 
-        let role = command.options.first().and_then(|option| match option.value {
+        let role = command.options.first().and_then(|option| match &option.value {
             CommandOptionValue::Role(id) => Some(id.get()),
             _ => None,
         });
@@ -396,10 +412,11 @@ impl App {
             .await?
             .model()
             .await?;
-        settings.honeypot_channel_id = Some(channel.id.get());
+        let channel_id = channel.id();
+        settings.honeypot_channel_id = Some(channel_id.get());
 
         let components = ui::honeypot_warning();
-        send_v2(&self.http, channel.id, &components).await?;
+        send_v2(&self.http, channel_id, &components).await?;
         Ok(())
     }
 
@@ -478,10 +495,7 @@ enum ChannelSetting {
     Leave,
 }
 
-async fn register_commands(
-    http: &HttpClient,
-    application_id: Id<twilight_model::id::marker::ApplicationMarker>,
-) -> Result<()> {
+async fn register_commands(http: &HttpClient, application_id: Id<ApplicationMarker>) -> Result<()> {
     let manage = Permissions::MANAGE_GUILD;
     let commands = vec![
         CommandBuilder::new("about", "About Bear Security", CommandType::ChatInput).build(),
